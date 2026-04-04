@@ -33,7 +33,7 @@ class DownlinkResult:
     The environment aggregates these to compute per-tick reward.
     """
     schedule_id:    str
-    satellite_id:   int
+    sat_id:   int
     station_id:     int
     tick:           int
     bytes_downloaded: int
@@ -67,11 +67,11 @@ class Scheduler:
         _schedule: Dict[schedule_id → ScheduleEntryModel]
             All committed, not-yet-executed assignments.
 
-        _queues: Dict[satellite_id → List[DataChunkModel]]
+        _queues: Dict[sat_id → List[DataChunkModel]]
             Live priority queues. Mutated as bytes are downloaded.
             Highest priority first. Within same priority, FIFO.
 
-        _buffer_bytes: Dict[satellite_id → int]
+        _buffer_bytes: Dict[sat_id → int]
             Running total of bytes remaining per satellite.
             Derived from _queues but cached for O(1) observation access.
 
@@ -114,7 +114,7 @@ class Scheduler:
         self._download_log = []
         self._init_queues()
 
-    def inject_chunks(self, satellite_id: int, chunks: List[DataChunkModel]) -> None:
+    def inject_chunks(self, sat_id: int, chunks: List[DataChunkModel]) -> None:
         """
         Insert emergency chunks into a satellite's queue mid-episode.
         Emergency chunks (priority=3) are inserted at the front, so they
@@ -125,13 +125,13 @@ class Scheduler:
         normal = [c for c in chunks if c.priority < 3]
 
         # Emergency at front, then existing queue, then any injected normal
-        self._queues[satellite_id] = (
+        self._queues[sat_id] = (
             emergency
-            + self._queues.get(satellite_id, [])
+            + self._queues.get(sat_id, [])
             + normal
         )
-        self._buffer_bytes[satellite_id] = sum(
-            c.size_bytes for c in self._queues[satellite_id]
+        self._buffer_bytes[sat_id] = sum(
+            c.size_bytes for c in self._queues[sat_id]
         )
 
     # ------------------------------------------------------------------
@@ -179,7 +179,7 @@ class Scheduler:
         schedule_id = f"sch_s{sat_id}_g{station_id}_{tick:03d}_{uuid.uuid4().hex[:4]}"
         entry = ScheduleEntryModel(
             schedule_id=schedule_id,
-            satellite_id=sat_id,
+            sat_id=sat_id,
             station_id=station_id,
             window_id=window_id,
             tick=tick,
@@ -259,19 +259,19 @@ class Scheduler:
 
         for entry in firing:
             avail = availability.get(entry.station_id, 1.0)
-            rate_bps = self._downlink_rates.get(entry.satellite_id, 150_000_000)
+            rate_bps = self._downlink_rates.get(entry.sat_id, 150_000_000)
             # max_bytes for this window: rate × 600s (one tick) × availability
             # We use a fixed 600s window width here; the pass_windows.json
             # duration_s is used for more precise scheduling in future work.
             window_bytes = int(rate_bps / 8 * 600 * avail)
 
             bytes_downloaded, chunks_log = self._dequeue(
-                entry.satellite_id, window_bytes
+                entry.sat_id, window_bytes
             )
 
             result = DownlinkResult(
                 schedule_id=entry.schedule_id,
-                satellite_id=entry.satellite_id,
+                sat_id=entry.sat_id,
                 station_id=entry.station_id,
                 tick=tick,
                 bytes_downloaded=bytes_downloaded,
@@ -296,16 +296,20 @@ class Scheduler:
         return list(self._schedule.values())
 
     def get_buffer_bytes(self) -> Dict[str, int]:
-        """satellite_id (str key) → remaining bytes. JSON-safe."""
+        """sat_id (str key) → remaining bytes. JSON-safe."""
         return {str(k): v for k, v in self._buffer_bytes.items()}
 
     def get_queues(self) -> Dict[str, List[DataChunkModel]]:
-        """satellite_id (str key) → chunk list. JSON-safe."""
+        """sat_id (str key) → chunk list. JSON-safe."""
         return {str(k): list(v) for k, v in self._queues.items()}
 
     def get_download_log(self) -> List[DownlinkResult]:
         """Full append-only log. Used by graders at episode end."""
         return list(self._download_log)
+
+    def get_rates_bps(self) -> Dict[str, int]:
+        """sat_id (str key) → downlink rate. JSON-safe."""
+        return {str(k): v for k, v in self._downlink_rates.items()}
 
     def is_held(self, sat_id: int) -> bool:
         return sat_id in self._held_sats
@@ -345,12 +349,12 @@ class Scheduler:
         for entry in self._schedule.values():
             if entry.tick != tick:
                 continue
-            if entry.station_id == station_id and entry.satellite_id != sat_id:
+            if entry.station_id == station_id and entry.sat_id != sat_id:
                 return (
                     f"Station {station_id} already assigned to "
-                    f"satellite {entry.satellite_id} at tick {tick}"
+                    f"satellite {entry.sat_id} at tick {tick}"
                 )
-            if entry.satellite_id == sat_id and entry.station_id != station_id:
+            if entry.sat_id == sat_id and entry.station_id != station_id:
                 return (
                     f"Satellite {sat_id} already assigned to "
                     f"station {entry.station_id} at tick {tick}"

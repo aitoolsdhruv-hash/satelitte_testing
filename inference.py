@@ -138,7 +138,7 @@ def _obs_to_prompt(obs: SatelliteObservation, step: int, history: list[str]) -> 
     )[:12]  # top 12 windows — enough context without blowing the context window
 
     windows_text = "\n".join(
-        f"  window_id={w.window_id}  sat={w.satellite_id}  "
+        f"  window_id={w.window_id}  sat={w.sat_id}  "
         f"stn={w.station_id}  tick={w.tick}  "
         f"quality={w.link_quality:.2f}  "
         f"avail={float(avail.get(str(w.station_id), 1.0)):.2f}  "
@@ -168,7 +168,7 @@ def _obs_to_prompt(obs: SatelliteObservation, step: int, history: list[str]) -> 
 
     # Current schedule
     sched_text = "\n".join(
-        f"  {e.schedule_id}: sat{e.satellite_id}→stn{e.station_id} tick={e.tick}"
+        f"  {e.schedule_id}: sat{e.sat_id}→stn{e.station_id} tick={e.tick}"
         for e in obs.current_schedule[:6]
     ) or "  (empty)"
 
@@ -250,7 +250,8 @@ def _parse_action(response_text: str) -> SatelliteAction:
     end = text.rfind("}") + 1
     if start >= 0 and end > start:
         try:
-            data = json.loads(text[start:end])
+            candidate = text[start:end]
+            data = json.loads(candidate)
             return SatelliteAction(**data)
         except Exception:
             pass
@@ -276,8 +277,8 @@ def run_episode(
     Returns a result dict with keys:
         task, steps, total_reward, final_score, breakdown, duration_s
     """
-    result: "StepResult[SatelliteObservation]" = env.reset()  # ← add the type hint
-    obs: "SatelliteObservation" = result.observation  # ← add the type hint
+    result: "StepResult[SatelliteObservation]" = env.reset(task=task)
+    obs: "SatelliteObservation" = result.observation
     history: list[str] = []
     step = 0
     t_start = time.time()
@@ -308,6 +309,9 @@ def run_episode(
         except Exception as exc:
             print(f"  [warn] LLM call failed at step {step}: {exc}")
             raw_text = ""
+            
+        if raw_text:
+            print(f"  [debug] LLM raw response (step {step}):\n{raw_text[:500]}...")
 
         action = _parse_action(raw_text)
 
@@ -342,21 +346,12 @@ def run_episode(
     final_state = env.state()
     duration = time.time() - t_start
 
-    # grade_breakdown gives the detailed score breakdown for README output
-    episode_data = env.get_episode_data()
-    breakdown = grade_breakdown(
-        task=task,
-        download_log=episode_data["download_log"],
-        all_chunks=episode_data["all_chunks"],
-        emergency_injections=episode_data["emergency_injections"],
-    )
-
     return {
         "task": task,
         "steps": step,
         "total_reward": round(obs.reward, 4),
         "final_score": round(final_state.final_score, 4),
-        "breakdown": breakdown,
+        "breakdown": final_state.breakdown,
         "duration_s": round(duration, 1),
     }
 

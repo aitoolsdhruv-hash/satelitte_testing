@@ -145,7 +145,7 @@
   "pass_windows": [
     {
       "tick": 14,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 65.0,
       "max_rate_mbps": 5.35,
@@ -155,7 +155,7 @@
     },
     {
       "tick": 19,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 60.0,
       "max_rate_mbps": 1.03,
@@ -165,7 +165,7 @@
     },
     {
       "tick": 24,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 198.1,
       "max_rate_mbps": 28.46,
@@ -175,7 +175,7 @@
     },
     {
       "tick": 29,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 121.4,
       "max_rate_mbps": 13.66,
@@ -185,7 +185,7 @@
     },
     {
       "tick": 34,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 381.3,
       "max_rate_mbps": 75.99,
@@ -195,7 +195,7 @@
     },
     {
       "tick": 39,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 242.2,
       "max_rate_mbps": 38.46,
@@ -205,7 +205,7 @@
     },
     {
       "tick": 44,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -215,7 +215,7 @@
     },
     {
       "tick": 49,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 374.1,
       "max_rate_mbps": 73.86,
@@ -225,7 +225,7 @@
     },
     {
       "tick": 54,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -235,7 +235,7 @@
     },
     {
       "tick": 59,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 490.7,
       "max_rate_mbps": 110.93,
@@ -245,7 +245,7 @@
     },
     {
       "tick": 64,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -255,7 +255,7 @@
     },
     {
       "tick": 69,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 579.5,
       "max_rate_mbps": 142.37,
@@ -265,7 +265,7 @@
     },
     {
       "tick": 74,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -275,7 +275,7 @@
     },
     {
       "tick": 79,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -285,7 +285,7 @@
     },
     {
       "tick": 84,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -295,7 +295,7 @@
     },
     {
       "tick": 89,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -305,7 +305,7 @@
     },
     {
       "tick": 94,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -315,7 +315,7 @@
     },
     {
       "tick": 99,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -325,7 +325,7 @@
     },
     {
       "tick": 104,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 502.0,
       "max_rate_mbps": 114.78,
@@ -335,7 +335,7 @@
     },
     {
       "tick": 109,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 600.0,
       "max_rate_mbps": 150.0,
@@ -345,7 +345,7 @@
     },
     {
       "tick": 114,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 291.3,
       "max_rate_mbps": 50.74,
@@ -355,7 +355,7 @@
     },
     {
       "tick": 119,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 461.0,
       "max_rate_mbps": 101.03,
@@ -365,7 +365,7 @@
     },
     {
       "tick": 124,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 134.0,
       "max_rate_mbps": 15.82,
@@ -375,7 +375,7 @@
     },
     {
       "tick": 129,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 222.8,
       "max_rate_mbps": 33.93,
@@ -385,7 +385,7 @@
     },
     {
       "tick": 134,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 0,
       "duration_s": 60.0,
       "max_rate_mbps": 0.79,
@@ -395,7 +395,7 @@
     },
     {
       "tick": 139,
-      "satellite_id": 1,
+      "sat_id": 1,
       "station_id": 1,
       "duration_s": 68.3,
       "max_rate_mbps": 5.77,

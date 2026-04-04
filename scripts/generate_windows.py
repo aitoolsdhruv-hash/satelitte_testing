@@ -176,7 +176,7 @@
 # #                 windows.append({
 # #                     "window_id":     window_id,
 # #                     "tick":          tick,
-# #                     "satellite_id":  sat_id,
+# #                     "sat_id":  sat_id,
 # #                     "station_id":    gs_id,
 # #                     "duration_s":    duration_s,
 # #                     "max_rate_mbps": round(rate_mbps, 2),
@@ -246,7 +246,7 @@
 # #     print("\nWindows per satellite:")
 # #     win_per_sat = {}
 # #     for w in windows:
-# #         win_per_sat[w["satellite_id"]] = win_per_sat.get(w["satellite_id"], 0) + 1
+# #         win_per_sat[w["sat_id"]] = win_per_sat.get(w["sat_id"], 0) + 1
 # #     for sid, count in sorted(win_per_sat.items()):
 # #         name = satellites_meta[sid]["name"]
 # #         print(f"  [{sid}] {name:30s}  {count} windows")
@@ -567,7 +567,7 @@ def compute_windows() -> list[dict]:
 
                 windows.append({
                     "tick": tick,
-                    "satellite_id": sat_id,
+                    "sat_id": sat_id,
                     "station_id": gs_id,
                     "duration_s": round(duration, 1),
                     "max_rate_mbps": round(rate, 2),
@@ -642,7 +642,7 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
         emergency_injections = [
             {
                 "inject_at_min": 240,
-                "satellite_id": 2,
+                "sat_id": 2,
                 "chunk": {
                     "chunk_id": "emg_s2_000",
                     "priority": 3,
@@ -653,7 +653,7 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
             },
             {
                 "inject_at_min": 240,
-                "satellite_id": 4,
+                "sat_id": 4,
                 "chunk": {
                     "chunk_id": "emg_s4_000",
                     "priority": 3,
@@ -664,7 +664,7 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
             },
             {
                 "inject_at_min": 480,
-                "satellite_id": 6,
+                "sat_id": 6,
                 "chunk": {
                     "chunk_id": "emg_s6_000",
                     "priority": 3,
@@ -678,7 +678,7 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
     # Filter pass windows to only active sats + stations
     task_windows = [
         w for w in windows
-        if w["satellite_id"] in active_sats
+        if w["sat_id"] in active_sats
            and w["station_id"] in active_stations
     ]
 

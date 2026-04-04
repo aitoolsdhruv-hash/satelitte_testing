@@ -180,9 +180,10 @@ def _grade_task3(
     # Bytes from emergency chunks actually downloaded (from download_log)
     emg_downloaded = 0.0
     for result in download_log:
-        for chunk_log in result.chunks_downloaded:
-            if chunk_log["chunk_id"] in emg_meta:
-                emg_downloaded += PRIORITY_WEIGHT[3] * chunk_log["bytes_taken"]
+        chunks_downloaded = _get(result, "chunks_downloaded", [])
+        for chunk_log in chunks_downloaded:
+            if _get(chunk_log, "chunk_id") in emg_meta:
+                emg_downloaded += PRIORITY_WEIGHT[3] * _get(chunk_log, "bytes_taken", 0)
 
     emergency_score = emg_downloaded / emg_total if emg_total > 0 else 0.0
 
@@ -203,9 +204,18 @@ def _grade_task3(
 # Shared helpers
 # ─────────────────────────────────────────────────────────────
 
+def _get(obj, key, default=None):
+    """Helper to access attribute OR dictionary key."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
 def _total_bytes(download_log: List[DownlinkResult]) -> int:
     """Sum of all bytes_downloaded across all DownlinkResults."""
-    return sum(r.bytes_downloaded for r in download_log)
+    total = 0
+    for r in download_log:
+        total += _get(r, "bytes_downloaded", 0)
+    return total
 
 
 def _weighted_total(chunks: List[dict]) -> float:
@@ -226,9 +236,12 @@ def _weighted_downloaded(download_log: List[DownlinkResult]) -> float:
     """
     total = 0.0
     for result in download_log:
-        for chunk_log in result.chunks_downloaded:
-            w = PRIORITY_WEIGHT.get(chunk_log["priority"], 1.0)
-            total += w * chunk_log["bytes_taken"]
+        chunks = _get(result, "chunks_downloaded", [])
+        for chunk_log in chunks:
+            p = _get(chunk_log, "priority", 1)
+            bt = _get(chunk_log, "bytes_taken", 0)
+            w = PRIORITY_WEIGHT.get(p, 1.0)
+            total += w * bt
     return total
 
 
@@ -251,11 +264,13 @@ def _compute_delay_penalties(
     # chunk_id → earliest tick it was (partially) downloaded
     first_download_tick: Dict[str, int] = {}
     for result in download_log:
-        for chunk_log in result.chunks_downloaded:
-            cid = chunk_log["chunk_id"]
+        chunks = _get(result, "chunks_downloaded", [])
+        tick = _get(result, "tick", 0)
+        for chunk_log in chunks:
+            cid = _get(chunk_log, "chunk_id")
             if cid in emg_meta:
                 if cid not in first_download_tick:
-                    first_download_tick[cid] = result.tick
+                    first_download_tick[cid] = tick
 
     total_penalty = 0.0
     for chunk_id, meta in emg_meta.items():
@@ -343,12 +358,13 @@ def grade_breakdown(
             PRIORITY_WEIGHT[3] * c["size_bytes"]
             for c in emg_meta.values()
         )
-        emg_dl = sum(
-            PRIORITY_WEIGHT[3] * cl["bytes_taken"]
-            for r in download_log
-            for cl in r.chunks_downloaded
-            if cl["chunk_id"] in emg_meta
-        )
+        emg_dl = 0.0
+        for r in download_log:
+            chunks_downloaded = _get(r, "chunks_downloaded", [])
+            for cl in chunks_downloaded:
+                if _get(cl, "chunk_id") in emg_meta:
+                    emg_dl += PRIORITY_WEIGHT[3] * _get(cl, "bytes_taken", 0)
+
         breakdown["base_score"] = round(_grade_task2(download_log, all_chunks), 4)
         breakdown["emergency_score"] = round(emg_dl / max(1, emg_total), 4)
         breakdown["delay_penalties"] = round(_compute_delay_penalties(download_log, emg_meta), 4)

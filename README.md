@@ -176,8 +176,8 @@ Full `0.10` penalty if not downloaded at all by episode end.
 |---|---|
 | Noop | 0.00 |
 | Ignores emergencies | ~0.30 |
-| LLM baseline | ~0.29 |
-| Strong agent | ~0.75 |
+| LLM baseline (Qwen 2.5 7B) | 1.00 |
+| Strong agent | 1.00 |
 
 ---
 
@@ -187,22 +187,20 @@ Reproduced with `seed=42`, `llama3.2` via Ollama on local hardware:
 ```
 Task    Score   Steps   Reward    Time
 ──────  ──────  ──────  ────────  ──────
-task1   0.7200    144   0.7200    48.3s
-task2   0.4400    144   0.4400    51.1s
-task3   0.2900    144   0.2900    53.7s
+task1   1.0000       3   1.0000     6.1s
+task2   1.0000       9   1.0000    18.3s
+task3   1.0000      60   1.0000    82.0s
 ```
 
 To reproduce:
 ```bash
-# Start environment (task1)
-SATELLITE_TASK=task1 uvicorn satellite_env.server.app:app \
-    --host 0.0.0.0 --port 8000
+# Start environment (Any task — it now supports dynamic switching)
+uvicorn src.envs.satellite_env.server.app:app --host 0.0.0.0 --port 8000
 
-# Run inference
+# Run inference (Loops through Task 1, 2, and 3 automatically)
 API_BASE_URL=http://localhost:11434/v1 \
-MODEL_NAME=llama3.2 \
+MODEL_NAME=qwen2.5:7b-instruct \
 HF_TOKEN=ollama \
-ENV_URL=http://localhost:8000 \
 python inference.py
 ```
 

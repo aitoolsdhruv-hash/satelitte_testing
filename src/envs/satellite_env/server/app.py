@@ -28,8 +28,8 @@ from src.envs.satellite_env.server.environment import SatelliteEnvironment
 # Task is selected via environment variable so the same Docker image
 # serves all three tasks — judges switch tasks by changing SATELLITE_TASK.
 # Defaults to task1 so a bare `docker run` works out of the box.
-_task = os.getenv("SATELLITE_TASK", "task1")
-_seed = int(os.getenv("SATELLITE_SEED", "42"))
+_task = os.getenv("SATELLITE_TASK", "task1").strip()
+_seed = int(os.getenv("SATELLITE_SEED", "42").strip())
 
 env = SatelliteEnvironment(task=_task, seed=_seed)
 app = create_fastapi_app(
