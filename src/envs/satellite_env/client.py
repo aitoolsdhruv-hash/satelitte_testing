@@ -24,7 +24,7 @@ from __future__ import annotations
 from openenv.core.env_client import EnvClient
 from openenv.core.client_types import StepResult
 
-from src.envs.satellite_env.server.models import (
+from src.envs.satellite_env.models import (
     DataChunkModel,
     PassWindowModel,
     RewardModel,

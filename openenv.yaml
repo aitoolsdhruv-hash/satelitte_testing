@@ -9,8 +9,8 @@
 
 name: satellite-downlink-scheduler
 version: "1.0.0"
-author: ""                          # fill in your HF username before submitting
-repository: ""                      # fill in your HF Space URL before submitting
+author: "TanveeK10"
+repository: "https://github.com/TanveeK10/Satellite_Scheduling"
 license: "apache-2.0"
 
 description: >
@@ -82,4 +82,4 @@ observation_space:
 
     satellite_buffer_bytes:
       type: "Dict[str, int]"
-      description: Remaining bytes in each satellite's on
+      description: Remaining bytes in each satellite's on-board storage.

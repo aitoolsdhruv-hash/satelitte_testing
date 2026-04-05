@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 
 from openenv.core.env_server import Environment
 
-from src.envs.satellite_env.server.models import (
+from src.envs.satellite_env.models import (
     DataChunkModel,
     PassWindowModel,
     RewardModel,

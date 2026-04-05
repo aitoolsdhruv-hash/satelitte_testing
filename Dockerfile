@@ -1,48 +1,62 @@
-# Dockerfile (project root)
-#
-# Builds the Satellite Downlink Scheduler environment.
-# Primary image for serving Task 1, 2, or 3 via SATELLITE_TASK env var.
-#
-# Build:
-#     docker build -t satellite-env .
-#
-# Run (local, serving task1):
-#     docker run -it -p 8000:8000 satellite-env
-#
-# Run (HF Spaces standard):
-#     docker run -it -p 7860:7860 -e SATELLITE_TASK=task3 satellite-env
+# Satellite Downlink Scheduler - Dockerfile
+# Optimized for Hugging Face Spaces (Docker SDK)
 
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-# Install system utilities
+# ── Non-root user ────────────────────────────────────────────
+# Required for HF Spaces Dev Mode and security.
+# uid 1000 matches the HF Spaces runner uid.
+RUN useradd -m -u 1000 user
+
+# ── System deps ──────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+        git \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
+# ── Working directory ─────────────────────────────────────────
 WORKDIR /app
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# ── Install Python deps ───────────────────────────────────────
+# Copy requirements from root
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copy source code and config
-# NOTE: we do NOT copy the 'data' directory. Scenarios are 
-# generated at runtime (or download logic could be added).
-COPY src/ src/
-COPY openenv.yaml .
-COPY inference.py .
+# ── Copy source ───────────────────────────────────────────────
+# .dockerignore prevents bloating the image with venv/git
+COPY --chown=user . /app
 
-# Generate scenarios for all 3 tasks on startup
-COPY scripts/ scripts/
+# ── Generate scenarios ────────────────────────────────────────
+# Required for Task 1/2/3 to have JSON window data available.
 RUN python scripts/generate_windows.py
 
-# Expose port (7860 for HF Spaces / Challenge Standard)
+# ── Install the package in editable mode ──────────────────────
+# This allows 'import src.envs.satellite_env' to work as a package
+RUN pip install --no-cache-dir -e .
+
+# ── Switch to non-root user ───────────────────────────────────
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
+
+# ── Runtime env vars ──────────────────────────────────────────
+ENV SATELLITE_TASK=task1 \
+    SATELLITE_SEED=42 \
+    WORKERS=2 \
+    PORT=7860 \
+    HOST=0.0.0.0
+
+# ── Expose port ───────────────────────────────────────────────
 EXPOSE 7860
 
-# Metadata used by the runner to start the server
-ENV PYTHONPATH=/app
-ENV SATELLITE_TASK=task1
-ENV SATELLITE_SEED=42
+# ── Health check ──────────────────────────────────────────────
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Command to start the FastAPI server
-CMD ["uvicorn", "src.envs.satellite_env.server.app:app", "--host", "0.0.0.0", "--port", "7860"]
+# ── Start server ──────────────────────────────────────────────
+# Using the module path relative to the root
+CMD uvicorn src.envs.satellite_env.server.app:app \
+        --host ${HOST} \
+        --port ${PORT} \
+        --workers ${WORKERS}
