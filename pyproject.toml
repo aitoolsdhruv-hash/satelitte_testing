@@ -1,7 +1,7 @@
 # pyproject.toml  (project root)
 #
 # This file serves two purposes:
-#   1. Makes `pip install -e .` work so `satellite_env` resolves on sys.path
+#   1. Makes `pip install -e .` work so `src.envs.satellite_env` resolves on sys.path
 #   2. Declares all dependencies for local development (venv + uv)
 #
 # The server/requirements.txt is a pinned subset used inside Docker.
@@ -35,10 +35,12 @@ dependencies = [
     "requests>=2.31.0",
 
     # Server extras
-    "python-multipart>=0.0.9",
     "httpx>=0.27.0",
     "tqdm>=4.66.0",
 ]
+
+[project.scripts]
+server = "src.envs.satellite_env.server.app:main"
 
 [project.optional-dependencies]
 dev = [
@@ -52,8 +54,3 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.txt"]
-
-# ── uv script entrypoints ─────────────────────────────────────
-# Allows `uv run server` as a shortcut (matches OpenEnv convention)
-[project.scripts]
-satellite-server = "satellite_env.server.app:create_app"
