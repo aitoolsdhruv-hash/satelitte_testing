@@ -8,12 +8,18 @@ jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
+      - name: Debug Info
+        run: |
+          git remote -v
+          echo "Syncing to Dhruvk14/Satellite_scheduler_updated"
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git push --force https://Dhruvk14:$HF_TOKEN@huggingface.co/spaces/Dhruvk14/Satellite_scheduler_updated HEAD:main
+          git config --global user.email "bot@github.com"
+          git config --global user.name "SyncBot"
+          git push --force https://Dhruvk14:$HF_TOKEN@huggingface.co/spaces/Dhruvk14/Satellite_scheduler_updated main
