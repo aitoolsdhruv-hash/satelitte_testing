@@ -11,7 +11,7 @@ tags:
   - satellite
   - real-world
   - reinforcement-learning
-short_description: OpenEnv environment — LEO satellite downlink scheduling (v12.0 Stable)
+short_description: OpenEnv LEO Satellite Downlink Scheduling Environment
 ---
 
 # Satellite Downlink Scheduler 🛰️
