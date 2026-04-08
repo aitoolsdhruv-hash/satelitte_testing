@@ -433,6 +433,7 @@ Writes:
 """
 
 import json
+import math
 import pathlib
 import random
 import sys
@@ -445,7 +446,7 @@ from datetime import datetime, timezone, timedelta
 EPOCH = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
 
 SEED = 42
-NUM_SATS = 8
+NUM_SATS = 15
 TICKS = 144  # 10-min ticks = 24 h
 TICK_MIN = 10
 MIN_ELEV = 30.0  # degrees — below this, no link
@@ -459,6 +460,8 @@ GROUND_STATIONS = [
     {"id": 1, "name": "McMurdo", "lat": -77.846, "lon": 166.676, "elev_m": 10},
     {"id": 2, "name": "Bangalore", "lat": 12.9716, "lon": 77.5946, "elev_m": 920},
     {"id": 3, "name": "Fairbanks", "lat": 64.8378, "lon": -147.7164, "elev_m": 136},
+    {"id": 4, "name": "Hartebeesthoek", "lat": -25.8897, "lon": 27.7078, "elev_m": 1550},
+    {"id": 5, "name": "Kourou", "lat": 5.1614, "lon": -52.6416, "elev_m": 15},
 ]
 
 # ---------------------------------------------------------------------------
@@ -508,6 +511,41 @@ PINNED_TLES = [
         "1 43013U 17073A   25001.50000000  .00000036  00000-0  55100-4 0  9995",
         "2 43013  98.7450  27.1300 0001098  89.7800 270.3400 14.19589012 10008",
     ),
+    (
+        "SENTINEL-2B",
+        "1 42063U 17013A   26097.92777545 -.00000108  00000+0 -24537-4 0  9992",
+        "2 42063  98.5661 173.7018 0001214  80.0787 300.0554 14.21507278384843",
+    ),
+    (
+        "SENTINEL-3B",
+        "1 43431U 18039A   26097.80491745  .00000012  00000+0  22765-4 0  9990",
+        "2 43431  98.6366 179.6201 0001855  80.0554 280.0554 14.26941212314353",
+    ),
+    (
+        "LANDSAT-9",
+        "1 49260U 21088A   26097.50000000  .00000007  00000-0  15740-4 0  9991",
+        "2 49260  98.2219  28.5200 0001350  89.2100 270.9200 14.57148345 10005",
+    ),
+    (
+        "GPM",
+        "1 39574U 14010A   26097.82222222  .00000055  00000-0  10270-3 0  9994",
+        "2 39574  64.9163  86.9990 0006317 273.1844  86.9990 15.49815322 10001",
+    ),
+    (
+        "METOP-B",
+        "1 38771U 12049A   26097.50000000  .00000091  00000-0  27940-4 0  9993",
+        "2 38771  98.7025  26.9300 0001376  87.6498 272.4823 14.21111635 10003",
+    ),
+    (
+        "METOP-C",
+        "1 43689U 18092A   26097.50000000  .00000106  00000+0  68239-4 0  9997",
+        "2 43689  98.6707 158.7601 0001655  60.0554 280.0554 14.23812345 10002",
+    ),
+    (
+        "CSS (TIANHE)",
+        "1 48274U 21035A 26097.94592976 .00023763 00000-0 26651-3 0 9995",
+        "2 48274  41.4681  29.9517 0004108 155.7123 204.3911 15.62089242282181",
+    ),
 ]
 
 
@@ -554,7 +592,7 @@ def compute_windows() -> list[dict]:
                 except Exception:
                     continue
 
-                if elev < MIN_ELEV:
+                if math.isnan(elev) or elev < MIN_ELEV:
                     continue
 
                 lq = elev_to_link_quality(elev)
@@ -566,9 +604,12 @@ def compute_windows() -> list[dict]:
                 duration = max(60.0, TICK_MIN * 60 * lq)
 
                 windows.append({
+                    "window_id": f"w_s{sat_id}_g{gs_id}_t{tick:03d}",
                     "tick": tick,
                     "sat_id": sat_id,
                     "station_id": gs_id,
+                    "start_min": tick * TICK_MIN,
+                    "end_min": (tick + 1) * TICK_MIN,
                     "duration_s": round(duration, 1),
                     "max_rate_mbps": round(rate, 2),
                     "elevation_deg": round(elev, 2),
@@ -610,9 +651,9 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
     """Build a self-contained scenario dict for one task."""
 
     if task == "task1":
-        # Easy: 2 satellites, 2 stations, clear weather, no emergencies
-        active_sats = [0, 1]
-        active_stations = [0, 1]
+        # Easy: 8 satellites, all 6 stations, clear weather
+        active_sats = list(range(8))
+        active_stations = list(range(6))
         weather_seed = None  # caller sets availability=1.0 always
         priority_weights = [0.6, 0.4, 0.0]  # only p1 and p2
         n_chunks = 85
@@ -620,9 +661,9 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
         emergency_injections = []
 
     elif task == "task2":
-        # Medium: all 8 sats, all 4 stations, weather dropout, mixed priorities
-        active_sats = list(range(8))
-        active_stations = list(range(4))
+        # Medium: all 15 sats, all 6 stations, weather dropout
+        active_sats = list(range(15))
+        active_stations = list(range(6))
         weather_seed = SEED
         priority_weights = [0.5, 0.35, 0.15]
         n_chunks = 85
@@ -630,28 +671,27 @@ def make_scenario(task: str, windows: list[dict], rng: random.Random) -> dict:
         emergency_injections = []
 
     else:  # task3
-        # Hard: same as task2 + emergency injections mid-episode
-        active_sats = list(range(8))
-        active_stations = list(range(4))
+        # Hard: all 15 sats, all 6 stations + emergency injections
+        active_sats = list(range(15))
+        active_stations = list(range(6))
         weather_seed = SEED
         priority_weights = [0.5, 0.3, 0.2]
         n_chunks = 85
         size_range = (100.0, 400.0)
-        # 8 emergency chunks injected spread across all 8 satellites
-        # into satellites 0-7 at different times
+        # 15 emergency chunks spread across all 15 satellites
         emergency_injections = [
             {
-                "inject_at_min": t*120 + 60,
+                "inject_at_min": t*90 + 30,
                 "sat_id": t,
                 "chunk": {
                     "chunk_id": f"emg_s{t}_{t:03d}",
                     "priority": 3,
                     "size_bytes": int(1500 * 1_000_000), # 1.5 GB
-                    "injected_at_min": t*120 + 60,
-                    "deadline_min": t*120 + 120, # 60-min window
+                    "injected_at_min": t*90 + 30,
+                    "deadline_min": t*90 + 120, # 90-min window
                 }
             }
-            for t in range(8)
+            for t in range(15)
         ]
 
     # Filter pass windows to only active sats + stations
