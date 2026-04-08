@@ -12,17 +12,25 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Verify Secret
-        run: |
-          if [ -z "${{ secrets.HF_TOKEN }}" ]; then
-            echo "Error: HF_TOKEN is empty. Please add it to your GitHub Secrets."
-            exit 1
-          fi
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config --global user.email "bot@github.com"
-          git config --global user.name "SyncBot"
-          # Use oauth2 format for the token to prevent "Password Authentication" errors
-          git push --force https://oauth2:$HF_TOKEN@huggingface.co/spaces/Dhruvk14/Satellite_scheduler_updated HEAD:refs/heads/main
+          python -c "
+          from huggingface_hub import HfApi
+          import os
+          token = os.environ.get('HF_TOKEN')
+          if not token:
+              print('HF_TOKEN missed')
+              exit(1)
+          api = HfApi(token=token)
+          print('Starting upload to Dhruvk14/Satellite_scheduler_updated...')
+          api.upload_folder(
+              folder_path='.',
+              repo_id='Dhruvk14/Satellite_scheduler_updated',
+              repo_type='space',
+              delete_patterns=['*.pyc', '__pycache__', '.git/*']
+          )
+          "
