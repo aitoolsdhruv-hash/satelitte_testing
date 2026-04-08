@@ -19,7 +19,7 @@ from src.envs.satellite_env.models import SatelliteAction, SatelliteObservation
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:11434/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 HF_TOKEN = os.getenv("HF_TOKEN", "ollama") 
-ENV_URL = os.getenv("ENV_URL", "http://localhost:8000")
+ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
 
 # ── Inference Parameters ─────────────────────────────────────
 MAX_STEPS = 144
