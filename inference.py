@@ -158,7 +158,8 @@ def _obs_to_prompt(obs: SatelliteObservation, step: int) -> str:
         status = " [OFFLINE]" if a < 0.5 else ""
         avail_status.append(f"'{sid_str}': {a}{status}")
     avail_text = "{" + ", ".join(avail_status) + "}"
-
+    queues_summary = "\n".join(queues_text) if queues_text else "  (empty)"
+    
     return textwrap.dedent(f"""
         CURRENT TIME: Step {step} | tick={current_tick}
         SATELLITES REMAINING/BUFFER: {remaining_summary}
@@ -168,7 +169,7 @@ def _obs_to_prompt(obs: SatelliteObservation, step: int) -> str:
         FUTURE WINDOWS (WAIT FOR THESE):
         {future_text}
         PRIORITY QUEUES:
-        {"\n".join(queues_text) if queues_text else "  (empty)"}
+        {queues_summary}
         EMERGENCY: {obs.info.get('emergency_injection', False)}
     """).strip()
 
