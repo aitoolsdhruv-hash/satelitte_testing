@@ -12,25 +12,22 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Install huggingface_hub
-        run: pip install huggingface_hub
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python -c "
-          from huggingface_hub import HfApi
-          import os
-          token = os.environ.get('HF_TOKEN')
-          if not token:
-              print('HF_TOKEN missed')
-              exit(1)
-          api = HfApi(token=token)
-          print('Starting upload to Dhruvk14/Satellite_scheduler_updated...')
-          api.upload_folder(
-              folder_path='.',
-              repo_id='Dhruvk14/Satellite_scheduler_updated',
-              repo_type='space',
-              delete_patterns=['*.pyc', '__pycache__', '.git/*']
-          )
-          "
+          # Create a .netrc file for seamless Git authentication
+          echo "machine huggingface.co" > ~/.netrc
+          echo "  login Dhruvk14" >> ~/.netrc
+          echo "  password $HF_TOKEN" >> ~/.netrc
+          chmod 600 ~/.netrc
+          
+          git config --global user.email "bot@github.com"
+          git config --global user.name "SyncBot"
+          # Check if the branch exists locally and push it to the remote
+          if git ls-remote --exit-code hf main; then
+            git push --force hf main
+          else
+            git remote add hf https://huggingface.co/spaces/Dhruvk14/Satellite_scheduler_updated
+            git push --force hf main
+          fi
