@@ -16,162 +16,120 @@ short_description: OpenEnv LEO Satellite Downlink Scheduling Environment
 
 # Satellite Downlink Scheduler 🛰️
 
-This project simulates a real-world operational challenge: scheduling contact windows for a mass-constellation of satellites to maximize data download. It is built for the *Meta-OpenEnv Hackathon*.
+A production-grade reinforcement learning environment simulating a 15-satellite LEO constellation scheduling challenge. This project is optimized for the **Meta-OpenEnv Hackathon**.
 
 ---
 
-## 1. Project Overview
+## 🏗️ 1. Project Overview
 
-The simulation is a clock-driven environment where time moves in 10-minute ticks. A full episode represents a 24-hour planning horizon (144 ticks).
+This environment simulates the operational complexity of managing a high-concurrency satellite fleet. Agents must coordinate downlinks between **15 satellites** and **6 shared ground stations** to maximize data throughput while navigating weather degradation and urgent emergency bursts.
 
-### The Physical Model (v12.0)
+### 🌌 The Physical Model (v12.0)
+- **Constellation**: 15 satellites with diverse buffer capacities and orbital mechanics.
+- **Ground Network**: 6 globally distributed stations (Svalbard, Bangalore, Fairbanks, etc.).
+- **Action Interface**: **Batch (N / tick)** — Simultaneous coordination of the entire network in a single step.
+- **Physics**: Real elevation-based throughput calculations and orbital pass windowing.
 
-* **Constellation (15 Satellites)**: High-concurrency fleet with diverse onboard data buffers.
-* **Ground Network (6 Stations)**: Svalbard, McMurdo, Bangalore, Fairbanks, Singapore, and Perth. 
-* **Downlink Model**: 100 Mbps "Slow Pipe" creates realistic bandwidth contention and buffer backlogs.
-* **Action Model**: **Batch (N / tick)** — The agent can coordinate multiple simultaneous downlinks across the entire ground network in a single step.
-
-### The Challenges
-
-* **High-Concurrency Contention**: 15 satellites competing for 6 shared ground station antennas.
-* **Weather (Tasks 2 & 3)**: Dynamically degrades link quality based on local conditions.
-* **Priority-Based Triage**: Routine (w=1), Important (w=10), and Emergency (w=100) data layers.
-* **Emergency Bursts (Task 3)**: Simultaneous **8-Burst Clusters** of urgent data with strict deadlines and late-delivery penalties.
-
----
-
-## 2. Final Benchmark Results (v1.2.0)
-
-Verified using the official `qwen2.5:7b` local inference agent on the baseline 15-satellite constellation scenario.
+### 📈 Final Benchmark Results
+Verified using the official `qwen2.5:7b` instruction agent.
 
 | Task | Objective | Score | Status |
 | :--- | :--- | :--- | :--- |
 | **Task 1** | Baseline Downlink (Clear Sky) | **0.9991** | ✅ PASSED |
 | **Task 2** | Weather Resilience (Variable Avail) | **0.9984** | ✅ PASSED |
-| **Task 3** | Stress Test (Weather + Emergencies) | **0.9971** | ✅ PASSED |
-
-**Total Fleet Performance Index: 0.9982**
+| **Task 3** | Crisis Response (Emergencies) | **0.9971** | ✅ PASSED |
 
 ---
 
-## 2. Project Structure (Submission-Ready)
+## 🧪 2. Environment Interface
 
-```text
-Satellite/
-├── Dockerfile                # REQUIRED (root-level)
-├── requirements.txt          # REQUIRED (dependencies for Docker)
-├── pyproject.toml
-├── inference.py              # REQUIRED (entry for evaluation)
-├── openenv.yaml              # REQUIRED (OpenEnv manifest)
-├── README.md
-├── .dockerignore
-├── .gitignore
-├── data/                     # REQUIRED (precomputed scenarios)
-└── src/
-    └── envs/
-        └── satellite_env/
-            ├── models.py     # Shared Pydantic models
-            ├── client.py     # OpenEnv client implementation
-            └── server/
-                ├── app.py           # FastAPI entrypoint
-                ├── environment.py   # Core logic
-                ├── graders.py       # Scoring functions
-                ├── scheduler.py     # Conflict detection
-                └── weather.py       # Weather simulation
-```
+### State & Action Spaces
+The environment provides a high-dimensionality observation space and a flexible batch-action space.
+- **State**: Includes satellite orbits, buffer levels, priority queues, and dynamic weather status.
+- **Action**: Supports multi-coordinated downlinks using the `schedule_multiple` action type.
+
+For the full JSON schema and operational constraints, see [**TECHNICAL_SPECIFICATION.md**](TECHNICAL_SPECIFICATION.md).
+
+### Scoring & Rewards
+Grades are deterministic and based on priority-weighted throughput and deadline compliance.
+- **Task 1**: Raw bytes over bytes available.
+- **Task 2**: Priority-weighted efficiency.
+- **Task 3**: Crisis management + late-delivery penalties.
+
+For exact mathematical formulas and breakdown examples, see [**REWARD_FUNCTION.md**](REWARD_FUNCTION.md).
 
 ---
 
-## 3. API Requirements (MANDATORY FOR VALIDATION)
+## 🤖 3. Reference Agents & Solvability
+To ensure baseline reproducibility, we provide three reference agents in the `agents/` directory:
+- **Random Agent**: Absolute baseline (checks env integrity).
+- **Greedy Agent**: Naive throughput maximization (no priority awareness).
+- **Priority Agent**: Smart rule-based heuristic (high-performance benchmark).
 
-The server MUST expose the following REST endpoints:
-
-* **POST /reset** → Initialize environment
-* **POST /step** → Execute action
-* **GET /state** → Return current state
-* **GET /health** → Docker health check
-
-⚠️ WebSocket (`/ws`) support is available but does NOT replace REST endpoints.
+See [**agents/README_AGENTS.md**](agents/README_AGENTS.md) for implementation details and baseline comparisons.
 
 ---
 
-## 4. Installation & Setup
+## 🛠️ 4. Installation & Local Setup
 
 ### Prerequisites
+- Python 3.11+
+- Docker
+- (Optional) Ollama for local LLM testing
 
-* Python 3.11+
-* Docker
-* (Optional) Ollama for local LLM testing
-
-### Local Setup
-
+### Local Development
 ```bash
-# 1. Clone and install
+# Clone and install dependencies
 git clone <your-repo>
 cd Satellite
 python -m venv venv
-
-# Windows (PowerShell)
-.\venv\Scripts\Activate.ps1
-# Mac/Linux
-source venv/bin/activate
-
-# 2. Install editable package
+source venv/bin/activate  # Or .\venv\Scripts\Activate.ps1 on Windows
 pip install -e .
 ```
 
 ---
 
-## 5. Running Locally
+## 🚀 5. Running the Environment
 
 ### Terminal 1: Environment Server
-
-The server handles physics, weather dropouts, and batch de-confliction.
-
-```powershell
-# Windows PowerShell
-$env:SATELLITE_TASK = "task3"  # Set to Task 3 for the full 15-sat stress test
-venv\Scripts\uvicorn src.envs.satellite_env.server.app:app --port 7860
-
-# Bash (Mac/Linux)
-export SATELLITE_TASK=task3
-uvicorn src.envs.satellite_env.server.app:app --port 7860
+```bash
+export SATELLITE_TASK=task3  # Options: task1, task2, task3
+uvicorn src.envs.satellite_env.server.app:app --host 0.0.0.0 --port 7860
 ```
 
-### Terminal 2: Inference Agent
+### Terminal 2: Reference Agent
+```bash
+python agents/rule_agent.py --task task3
+```
 
-Run the autonomous mission controller using a local LLM or HF router.
-
-```powershell
-# Windows PowerShell
-$env:ENV_URL = "http://localhost:7860"
-$env:API_BASE_URL = "http://localhost:11434/v1"  # Ollama endpoint
-$env:MODEL_NAME = "qwen2.5:7b-instruct-q4_k_m"
-
-venv\Scripts\python.exe inference.py
+### Terminal 2: Baseline Inference
+```bash
+export ENV_URL="http://localhost:7860"
+export API_BASE_URL="http://localhost:11434/v1"
+export MODEL_NAME="qwen2.5:7b"
+python inference.py
 ```
 
 ---
 
-## 6. Environment Variables
+## 📋 6. Submission Details
 
-| Variable | Purpose |
-| :--- | :--- |
-| `API_BASE_URL` | LLM endpoint (Ollama or HF router) |
-| `MODEL_NAME` | Model used for inference |
-| `HF_TOKEN` | Authentication token |
-| `SATELLITE_TASK` | Task to run (task1, task2, task3) |
-
----
-
-## 11. Mandatory Logging Format
-
-Your `inference.py` MUST emit EXACTLY:
-
+### Project Organization
 ```text
-[START] task=<task_name> env=<benchmark> model=<model_name>
-[STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
-[END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
+Satellite/
+├── Dockerfile                # Build definition
+├── inference.py              # Entry point for evaluation
+├── openenv.yaml              # Manifest for task mapping
+├── agents/                   # [NEW] Reference baseline agents
+├── tests/                    # [NEW] Logic & compliance tests
+├── data/                     # Scenario definitions
+└── src/envs/satellite_env/   # Environment implementation
 ```
 
-⚠️ Any deviation will cause evaluation failure.
+### Audit Checklist
+For a full breakdown of submission compliance and how to verify the environment, see [**SUBMISSION_CHECKLIST.md**](SUBMISSION_CHECKLIST.md).
+
+---
+
+## 🛡️ 7. License
+Licensed under the [**MIT License**](LICENSE).
