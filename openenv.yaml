@@ -73,6 +73,20 @@ observation_space:
       type: "Dict[str, int]"
       description: Remaining bytes in each satellite's on-board storage.
 
+    data_priority_queues:
+      type: "Dict[str, List[DataChunkModel]]"
+      description: >
+        Queued data chunks per satellite, including priority (1-3)
+        and deadlines for Task 3 triage.
+
+    reward_obj:
+      type: "RewardModel"
+      description: Detailed reward breakdown with value and metadata.
+
+    current_schedule:
+      type: "List[ScheduleEntryModel]"
+      description: Active station assignments scheduled for the current tick.
+
 # ── Submission Evaluation Tasks ─────────────────────────────
 
 tasks:

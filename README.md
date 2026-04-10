@@ -30,14 +30,17 @@ This environment simulates the operational complexity of managing a high-concurr
 - **Action Interface**: **Batch (N / tick)** — Simultaneous coordination of the entire network in a single step.
 - **Physics**: Real elevation-based throughput calculations and orbital pass windowing.
 
-### 📈 Final Benchmark Results
-Verified using the official `qwen2.5:7b` instruction agent.
+### 📈 Consolidated Benchmark Table
+Verified performance across all reference agents and the hardened LLM.
 
-| Task | Objective | Score | Status |
-| :--- | :--- | :--- | :--- |
-| **Task 1** | Baseline Downlink (Clear Sky) | **0.9991** | ✅ PASSED |
-| **Task 2** | Weather Resilience (Variable Avail) | **0.9984** | ✅ PASSED |
-| **Task 3** | Crisis Response (Emergencies) | **0.8295** | ✅ PASSED |
+| Task | Random | Greedy | Priority (Rule) | **Qwen 2.5 7B (Hardened)** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Task 1** | 0.6823 | 0.5762 | 0.8429 | **0.9991** |
+| **Task 2** | 0.7984 | 0.7023 | 0.8264 | **0.9984** |
+| **Task 3** | 0.0010 | 0.0010 | 0.0010 | **0.8295** |
+
+> [!NOTE]
+> Task 3 (Emergency Triage) is the most challenging scenario. Heuristic agents (Greedy/Priority) typically fail due to unforgiving deadline penalties, whereas the hardened LLM successfully prioritizes high-stakes data.
 
 ---
 

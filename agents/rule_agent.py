@@ -144,7 +144,7 @@ def main():
         state = env.state()
         print(f"\n✅ Mission Complete!")
         print(f"Final Score: {state.final_score:.4f}")
-        print(f"Breakdown: {state.reward_obj.breakdown}")
+        print(f"Breakdown: {obs.reward_obj.breakdown}")
 
 
 if __name__ == "__main__":

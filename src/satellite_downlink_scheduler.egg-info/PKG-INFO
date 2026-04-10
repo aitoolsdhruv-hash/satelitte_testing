@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: satellite-downlink-scheduler
-Version: 1.0.0
+Version: 1.2.0
 Summary: OpenEnv environment: satellite downlink scheduling
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
@@ -48,7 +48,7 @@ A production-grade reinforcement learning environment simulating a 15-satellite 
 
 This environment simulates the operational complexity of managing a high-concurrency satellite fleet. Agents must coordinate downlinks between **15 satellites** and **6 shared ground stations** to maximize data throughput while navigating weather degradation and urgent emergency bursts.
 
-### 🌌 The Physical Model (v12.0)
+### 🌌 The Physical Model (v1.2.0)
 - **Constellation**: 15 satellites with diverse buffer capacities and orbital mechanics.
 - **Ground Network**: 6 globally distributed stations (Svalbard, Bangalore, Fairbanks, etc.).
 - **Action Interface**: **Batch (N / tick)** — Simultaneous coordination of the entire network in a single step.
@@ -61,7 +61,7 @@ Verified using the official `qwen2.5:7b` instruction agent.
 | :--- | :--- | :--- | :--- |
 | **Task 1** | Baseline Downlink (Clear Sky) | **0.9991** | ✅ PASSED |
 | **Task 2** | Weather Resilience (Variable Avail) | **0.9984** | ✅ PASSED |
-| **Task 3** | Crisis Response (Emergencies) | **0.9971** | ✅ PASSED |
+| **Task 3** | Crisis Response (Emergencies) | **0.8295** | ✅ PASSED |
 
 ---
 
@@ -98,7 +98,7 @@ See [**agents/README_AGENTS.md**](agents/README_AGENTS.md) for implementation de
 
 ### Prerequisites
 - Python 3.11+
-- Docker
+- [**uv**](https://github.com/astral-sh/uv) (Recommended for dependency management)
 - (Optional) Ollama for local LLM testing
 
 ### Local Development
@@ -106,9 +106,7 @@ See [**agents/README_AGENTS.md**](agents/README_AGENTS.md) for implementation de
 # Clone and install dependencies
 git clone <your-repo>
 cd Satellite
-python -m venv venv
-source venv/bin/activate  # Or .\venv\Scripts\Activate.ps1 on Windows
-pip install -e .
+uv sync
 ```
 
 ---
@@ -116,23 +114,22 @@ pip install -e .
 ## 🚀 5. Running the Environment
 
 ### Terminal 1: Environment Server
-```bash
-export SATELLITE_TASK=task3  # Options: task1, task2, task3
-uvicorn src.envs.satellite_env.server.app:app --host 0.0.0.0 --port 7860
-```
-
-### Terminal 2: Reference Agent
-```bash
-python agents/rule_agent.py --task task3
+```powershell
+# PowerShell (Recommended for Windows stability)
+$env:SATELLITE_TASK='task3'
+uv run python -m uvicorn src.envs.satellite_env.server.app:app --host 127.0.0.1 --port 7860
 ```
 
 ### Terminal 2: Baseline Inference
-```bash
-export ENV_URL="http://localhost:7860"
-export API_BASE_URL="http://localhost:11434/v1"
-export MODEL_NAME="qwen2.5:7b"
-python inference.py
+```powershell
+$env:ENV_URL="http://127.0.0.1:7860"
+$env:API_BASE_URL="http://localhost:11434/v1"
+$env:MODEL_NAME="qwen2.5:7b"
+uv run python inference.py --task task3
 ```
+
+> [!NOTE]
+> **Windows Networking**: Use `127.0.0.1` instead of `localhost` in your environment variables to ensure stable WebSocket connections.
 
 ---
 
