@@ -29,6 +29,7 @@ This checklist provides a clear audit path for judges to verify the technical co
 - [ ] **Reward Guide**: Task-specific scoring math is explained with examples.
 - [ ] **Reference Agents**: Baseline agents (Random, Greedy, Priority) are provided in the `agents/` directory for verification.
 - [ ] **RL Guidance**: Training strategies and vectorization tips are provided for developers.
+- [ ] **Hallucination Defense**: Agent logic in `inference.py` includes recovery and filtering for protocol robustness.
 
 ---
 
@@ -38,13 +39,16 @@ Run these commands to verify the environment handles different logic complexitie
 
 ```bash
 # Verify baseline throughput
-python agents/greedy_agent.py --task task1
+uv run python agents/greedy_agent.py --task task1
 
 # Verify priority-weighting logic
-python agents/rule_agent.py --task task2
+uv run python agents/rule_agent.py --task task2
 
 # Verify deadline-sensitive crisis management (Task 3)
-python agents/rule_agent.py --task task3
+uv run python agents/rule_agent.py --task task3
+
+# Verify Hardened LLM Inference (Task 3)
+uv run python inference.py --task task3
 ```
 
 **Expected results match the "Consolidated Benchmark Table" in the root README.**

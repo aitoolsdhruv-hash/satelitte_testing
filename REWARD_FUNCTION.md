@@ -56,7 +56,7 @@ $$Score = \frac{\sum (W_p \cdot \text{Bytes Downloaded}_p)}{\sum (W_p \cdot \tex
 
 **Formula**:
 $$Score = 0.4 \cdot \text{Base Score} + 0.6 \cdot \text{Emergency Score} - \sum \text{Delay Penalties}$$
-$$Score = \max(Score, 0.001)$$
+$$Score = \max(Score, 0.0)$$
 
 **1. Base Score (0.4 weight)**
 Identical to Task 2 (Priority-weighted throughput).
@@ -74,7 +74,7 @@ Subtracted for each emergency chunk with a deadline:
 - **Random Agent**: ~0.001 (Fails deadlines)
 - **Ignores Emergencies**: ~0.30
 - **Strong Heuristic**: ~0.65 - 0.75
-- **Baseline (Qwen 2.5 7B)**: **0.9971**
+- **Baseline (Qwen 2.5 7B)**: **0.8295** (Hardened)
 
 ---
 

@@ -13,7 +13,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "satellite-downlink-scheduler"
-version     = "1.0.0"
+version     = "1.2.0"
 description = "OpenEnv environment: satellite downlink scheduling"
 readme      = "README.md"
 requires-python = ">=3.11"

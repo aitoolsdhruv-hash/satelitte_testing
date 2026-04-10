@@ -143,12 +143,10 @@ class SatelliteEnvironment(Environment):
         Reset to the beginning of the episode.
         Allows switching tasks dynamically during reset.
         """
-        print(f"[DEBUG] Environment.reset called: task={task}, seed={seed}")
         if task is not None: self._task = task
         if seed is not None: self._seed = seed
         
         if task is not None or seed is not None:
-            print(f"[DEBUG] Reloading scenario for {self._task}...")
             self._load_scenario(self._task, self._seed)
 
         self._boot()

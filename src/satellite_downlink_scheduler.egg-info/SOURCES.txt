@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 src/envs/satellite_env/__init__.py
@@ -16,3 +17,4 @@ src/satellite_downlink_scheduler.egg-info/dependency_links.txt
 src/satellite_downlink_scheduler.egg-info/entry_points.txt
 src/satellite_downlink_scheduler.egg-info/requires.txt
 src/satellite_downlink_scheduler.egg-info/top_level.txt
+tests/test_logic.py

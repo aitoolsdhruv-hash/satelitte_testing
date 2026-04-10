@@ -19,7 +19,7 @@ from src.envs.satellite_env.models import SatelliteAction, SatelliteObservation
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:11434/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 HF_TOKEN = os.getenv("HF_TOKEN", "ollama") 
-ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
+ENV_URL = os.getenv("ENV_URL", "http://127.0.0.1:7860")
 
 # ── Inference Parameters ─────────────────────────────────────
 MAX_STEPS = 144
@@ -176,6 +176,13 @@ def _obs_to_prompt(obs: SatelliteObservation, step: int) -> str:
 def get_action(client: OpenAI, obs: SatelliteObservation, step: int) -> SatelliteAction:
     user_prompt = _obs_to_prompt(obs, step)
     
+    # Pre-compute valid window map for current tick robustness
+    current_tick = obs.current_time_min // 10
+    window_map = {
+        (w.sat_id, w.station_id): w.window_id 
+        for w in obs.pass_windows if w.tick == current_tick
+    }
+
     try:
         completion = client.chat.completions.create(
             model=MODEL_NAME,
@@ -188,6 +195,31 @@ def get_action(client: OpenAI, obs: SatelliteObservation, step: int) -> Satellit
             text = text[text.find("{"):text.rfind("}")+1]
         
         data = json.loads(text)
+        
+        # Robustness: Auto-fill/Correct window IDs if sat/stn pair is unique and valid
+        if data.get("action_type") == "schedule_multiple" and "schedules" in data:
+            for sched in data["schedules"]:
+                try:
+                    # Explicit cast to int to match window_map keys
+                    sat = int(sched.get("sat_id"))
+                    stn = int(sched.get("station_id"))
+                    # If the pair exists in our current tick map, ENSURE we use the correct ID
+                    # This fixes LLM hallucinations for the complex Task 3 IDs
+                    if (sat, stn) in window_map:
+                        sched["window_id"] = window_map[(sat, stn)]
+                except (ValueError, TypeError):
+                    continue
+            
+            # Final Safety Filter: Remove any schedules that still lack a valid window_id
+            # This handles cases where the LLM hallucinates a (sat, stn) pair that has NO window at this tick.
+            valid_schedules = [s for s in data["schedules"] if s.get("window_id")]
+            if not valid_schedules:
+                # If no valid items remained, fallback to noop to avoid backend error
+                data["action_type"] = "noop"
+                data.pop("schedules", None)
+            else:
+                data["schedules"] = valid_schedules
+        
         return SatelliteAction(**data)
     except Exception:
         # Silently fail to noop to preserve [START][STEP][END] stdout cleanliness

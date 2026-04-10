@@ -11,7 +11,7 @@ name: satellite-downlink-scheduler
 version: "1.2.0"
 author: "Dhruvk14"
 repository: "https://huggingface.co/spaces/Dhruvk14/Satellite_Scheduler"
-license: "apache-2.0"
+license: "mit"
 
 description: >
   A high-concurrency simulation of a 15-satellite fleet with 6 ground stations
