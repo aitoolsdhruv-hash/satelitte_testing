@@ -107,6 +107,12 @@ $env:MODEL_NAME="qwen2.5:7b"
 uv run python inference.py --task task3
 ```
 
+### One-Command Verification (Task 1)
+For a quick, automated test of the environment and agent:
+```powershell
+$env:SATELLITE_TASK='task1'; Start-Process -FilePath "uv" -ArgumentList "run", "python", "-m", "uvicorn", "src.envs.satellite_env.server.app:app", "--host", "127.0.0.1", "--port", "7860" -NoNewWindow; Start-Sleep -Seconds 10; uv run python inference.py --task task1
+```
+
 > [!NOTE]
 > **Windows Networking**: Use `127.0.0.1` instead of `localhost` in your environment variables to ensure stable WebSocket connections.
 
