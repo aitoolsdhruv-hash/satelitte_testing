@@ -35,8 +35,8 @@ Verified performance across all reference agents and the hardened LLM.
 
 | Task | Random | Greedy | Priority (Rule) | **Qwen 2.5 7B (Hardened)** |
 | :--- | :--- | :--- | :--- | :--- |
-| **Task 1** | 0.6823 | 0.5762 | 0.8429 | **0.9991** |
-| **Task 2** | 0.7984 | 0.7023 | 0.8264 | **0.9984** |
+| **Task 1** | 0.6823 | 0.5762 | 0.8429 | **0.8329** |
+| **Task 2** | 0.7984 | 0.7023 | 0.8264 | **0.9530** |
 | **Task 3** | 0.0010 | 0.0010 | 0.0010 | **0.8295** |
 
 > [!NOTE]
