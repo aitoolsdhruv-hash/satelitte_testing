@@ -16,13 +16,13 @@ from src.envs.satellite_env.client import SatelliteEnv
 from src.envs.satellite_env.models import SatelliteAction, SatelliteObservation
 
 # ── Mandatory Environment Configuration ──────────────────────
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct")
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-if HF_TOKEN is None:
-    raise ValueError("HF_TOKEN environment variable is required")
 ENV_URL = os.getenv("ENV_URL", "http://127.0.0.1:7860")
+
+if API_KEY is None:
+    raise ValueError("HF_TOKEN or API_KEY environment variable is required")
 
 # ── Inference Parameters ─────────────────────────────────────
 MAX_STEPS = 144
@@ -106,9 +106,9 @@ def log_step(step: int, action: SatelliteAction, reward: float, done: bool, info
     norm = info.get("normalizer", 0)
     print(f"[STEP] step={step} action={action_str} reward={reward:.2f} done={done_val} error={error_val}", flush=True)
 
-def log_end(success: bool, steps: int, rewards: List[float]) -> None:
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 def _obs_to_prompt(obs: SatelliteObservation, step: int) -> str:
     current_tick = obs.current_time_min // 10
@@ -260,7 +260,7 @@ def run_task(env: SatelliteEnv, client: OpenAI, task_name: str, max_steps: int) 
         # Standard error handled by log_end caller or final scoring
         pass
     finally:
-        log_end(success=success, steps=steps_taken, rewards=rewards_list)
+        log_end(success=success, steps=steps_taken, score=score, rewards=rewards_list)
         return score
 
 def main():
@@ -270,7 +270,7 @@ def main():
     parser.add_argument("--max-steps", type=int, default=144, help="Max steps per task.")
     args = parser.parse_args()
 
-    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
+    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     with SatelliteEnv(base_url=ENV_URL).sync() as env:
         tasks = [args.task] if args.task else ["task1", "task2", "task3"]
         for t in tasks:
