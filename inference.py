@@ -16,8 +16,8 @@ from src.envs.satellite_env.client import SatelliteEnv
 from src.envs.satellite_env.models import SatelliteAction, SatelliteObservation
 
 # ── Mandatory Environment Configuration ──────────────────────
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 if HF_TOKEN is None:
