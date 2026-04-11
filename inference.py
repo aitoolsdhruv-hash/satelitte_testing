@@ -255,6 +255,7 @@ def run_task(env: SatelliteEnv, client: OpenAI, task_name: str, max_steps: int) 
             if obs.done: break
         
         score = env.state().final_score
+        score = min(max(score, 0.0), 1.0)  # Bulletproof safety clamp
         success = score >= 0.7
     except Exception:
         # Standard error handled by log_end caller or final scoring
