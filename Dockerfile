@@ -55,8 +55,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
 # ── Start server ──────────────────────────────────────────────
-# Using the module path relative to the root
-CMD uvicorn src.envs.satellite_env.server.app:app \
+# Using the flat server/app.py entry point for validator compliance
+CMD uvicorn server.app:app \
         --host ${HOST} \
         --port ${PORT} \
         --workers ${WORKERS}
